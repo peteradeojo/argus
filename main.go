@@ -74,7 +74,7 @@ func main() {
 
 	go func(watch []models.WatchStructure) {
 		core.Watch(watch)
-	}(config.Watch)
+	}(core.PrepWatchList(config.Watch))
 
 	core.SetupTCP(config.Server.Host, config.Server.Port)
 

@@ -147,3 +147,17 @@ func TestForWildCard(path string) (bool, []models.WatchStructure) {
 
 	return true, matchedFiles
 }
+
+func PrepWatchList(watchlist []models.WatchStructure) []models.WatchStructure {
+	var out []models.WatchStructure = []models.WatchStructure{}
+
+	for _, structure := range watchlist {
+		isWild, list := TestForWildCard(structure.Path)
+		if isWild {
+			out = append(out, list...)
+		} else {
+			out = append(out, structure)
+		}
+	}
+	return out
+}
