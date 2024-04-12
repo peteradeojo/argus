@@ -3,8 +3,10 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
+	"regexp"
 	"time"
 
 	"path/filepath"
@@ -107,4 +109,41 @@ func Watch(watchStructures []models.WatchStructure) {
 	}
 
 	<-done
+}
+
+func TestForWildCard(path string) (bool, []models.WatchStructure) {
+	regex := regexp.MustCompile(`^(.*)\*\.(\w+)`)
+	matches := regex.FindStringSubmatch(path)
+
+	if len(matches) == 0 {
+		return false, nil
+	}
+
+	dir := matches[1]
+	ext := matches[2]
+
+	pattern := fmt.Sprintf("%v\\w+\\.%v", dir, ext)
+	pathregex := regexp.MustCompile(pattern)
+
+	var matchedFiles []models.WatchStructure = []models.WatchStructure{}
+
+	err := filepath.Walk(dir, func(pathName string, fi fs.FileInfo, err error) error {
+		if !fi.IsDir() {
+			if pathregex.Match([]byte(pathName)) {
+				matchedFiles = append(matchedFiles, models.WatchStructure{
+					Path:             pathName,
+					WatchRecursively: false,
+				})
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Error: %v", err.Error())
+		return false, nil
+	}
+
+	return true, matchedFiles
 }
